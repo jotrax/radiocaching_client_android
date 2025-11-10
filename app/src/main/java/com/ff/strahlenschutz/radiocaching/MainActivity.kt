@@ -46,6 +46,9 @@ class LocationViewModel : ViewModel() {
     private val _locationState = MutableStateFlow("Lat: -, Lon: -")
     val locationState: StateFlow<String> = _locationState
 
+    private val _connectionState = MutableStateFlow(false)
+    val connectionState: StateFlow<Boolean> = _connectionState
+
     // MQTT Client (Blocking client for simplicity)
     private val mqttClient = MqttClient.builder()
         .useMqttVersion3()
@@ -67,8 +70,10 @@ class LocationViewModel : ViewModel() {
                 if (mqttClient.state != MqttClientState.CONNECTED) {
                     mqttClient.connect()
                 }
+                _connectionState.value = (mqttClient.state == MqttClientState.CONNECTED)
             } catch (e: Exception) {
                 e.printStackTrace()
+                _connectionState.value = false
             }
         }
     }
@@ -92,6 +97,7 @@ class LocationViewModel : ViewModel() {
             try {
                 if (mqttClient.state != MqttClientState.CONNECTED) {
                     mqttClient.connect()
+                    _connectionState.value = (mqttClient.state == MqttClientState.CONNECTED)
                 }
                 mqttClient.publishWith()
                     .topic(topic)
@@ -100,6 +106,7 @@ class LocationViewModel : ViewModel() {
                     .send()
             } catch (e: Exception) {
                 e.printStackTrace()
+                _connectionState.value = false
             }
         }
     }
@@ -108,6 +115,7 @@ class LocationViewModel : ViewModel() {
         try {
             if (mqttClient.state == MqttClientState.CONNECTED) {
                 mqttClient.disconnect()
+                _connectionState.value = false
             }
         } catch (e: Exception) {
             // ignore
@@ -152,6 +160,7 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
 
                     val coord by viewModel.locationState.collectAsState()
+                    val connected by viewModel.connectionState.collectAsState()
                     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                     val currentTime = LocalDateTime.now().format(formatter)
 
@@ -160,7 +169,7 @@ class MainActivity : ComponentActivity() {
                         coord = coord,
                         ts = currentTime,
                         doseRate = "0.120 uSv/h",
-                        conn = "Nein!",
+                        conn = if (connected) "Ja" else "Nein",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
