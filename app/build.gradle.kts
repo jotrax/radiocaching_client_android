@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.invoke
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -12,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = "com.ff.strahlenschutz.radiocaching"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -39,6 +41,15 @@ android {
     buildFeatures {
         compose = true
     }
+
+    packaging {
+        resources {
+            excludes += "META-INF/INDEX.LIST"
+            excludes += "META-INF/io.netty.versions.properties"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/NOTICE"
+        }
+    }
 }
 
 dependencies {
@@ -59,4 +70,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     implementation("com.google.android.gms:play-services-location:21.3.0")
+
+    implementation("com.hivemq:hivemq-mqtt-client:1.3.3")
 }
+
